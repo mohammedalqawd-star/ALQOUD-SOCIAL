@@ -73,3 +73,15 @@ flutter build apk --release
 - لا تفتح صلاحيات Firestore أو Storage للجميع.
 - لا تفعّل الرسائل العامة أو البث المباشر قبل تجهيز الحظر والإبلاغ ومراجعة المحتوى وضوابط الخصوصية.
 - قواعد Firebase الحالية بداية تحتاج مراجعة واختباراً أمنياً قبل إطلاق التطبيق للمستخدمين.
+
+## Android cloud APK build
+
+The Android project is configured for a GitHub Actions debug APK build.
+
+1. In the repository, open **Settings → Secrets and variables → Actions → New repository secret**.
+2. Set the secret name to `GOOGLE_SERVICES_JSON`.
+3. Paste the complete contents of the Firebase Android `google-services.json` file as the secret value. Do not commit that file to the repository.
+4. Open **Actions → Android APK → Run workflow** (or push a change to the configured paths).
+5. When the run succeeds, open the run summary and download the `alqoud-social-debug-apk` artifact. Extract the ZIP to get `app-debug.apk`.
+
+The workflow runs dependency resolution, Flutter analysis, tests, and a debug APK build. This is a development build, not a signed production release.
