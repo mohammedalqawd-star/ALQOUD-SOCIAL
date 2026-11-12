@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:material_ui/material_ui.dart';
 import '../services/app_backend.dart';
 
@@ -28,25 +29,37 @@ class _AuthScreenState extends State<AuthScreen> {
       } else {
         await AppBackend.signIn(email: email.text, password: password.text);
       }
-    } on FirebaseAuthException catch (e) {
-      setState(() => error = _message(e.code));
-    } catch (_) {
-      setState(() => error = 'تعذر إكمال العملية. تحقق من الاتصال وإعدادات Firebase.');
+    } on FirebaseAuthException catch (e, stack) {
+      debugPrint('Firebase Auth error: code=${e.code}, message=${e.message}');
+      debugPrintStack(stackTrace: stack);
+      if (mounted) {
+        setState(() => error = _message(e.code, e.message));
+      }
+    } catch (e, stack) {
+      debugPrint('Authentication flow error: $e');
+      debugPrintStack(stackTrace: stack);
+      if (mounted) {
+        setState(() => error = 'تعذر إكمال العملية. التفاصيل: ${e.runtimeType}: $e');
+      }
     } finally {
       if (mounted) setState(() => busy = false);
     }
   }
 
-  String _message(String code) {
+  String _message(String code, String? details) {
     switch (code) {
-      case 'email-already-in-use': return 'هذا البريد مستخدم من قبل.';
+      case 'email-already-in-use': return 'هذا البريد مستخدم من قبل. جرّب تسجيل الدخول.';
       case 'invalid-email': return 'صيغة البريد الإلكتروني غير صحيحة.';
       case 'weak-password': return 'كلمة المرور ضعيفة؛ استخدم 8 أحرف على الأقل.';
       case 'user-not-found':
       case 'wrong-password':
       case 'invalid-credential': return 'بيانات الدخول غير صحيحة.';
-      case 'network-request-failed': return 'تحقق من اتصال الإنترنت.';
-      default: return 'تعذر تسجيل الدخول حالياً (' + code + ').';
+      case 'network-request-failed': return 'تعذر الاتصال بخدمة Firebase. تحقق من الإنترنت.';
+      case 'operation-not-allowed': return 'تسجيل البريد الإلكتروني غير مسموح في إعدادات Firebase.';
+      case 'too-many-requests': return 'تمت محاولات كثيرة. انتظر قليلاً ثم أعد المحاولة.';
+      default:
+        final extra = (details == null || details.trim().isEmpty) ? '' : '\\nالتفاصيل: ' + details;
+        return 'فشل التحقق من Firebase (رمز: ' + code + ').' + extra;
     }
   }
 
@@ -80,7 +93,7 @@ class _AuthScreenState extends State<AuthScreen> {
               decoration: InputDecoration(labelText: 'كلمة المرور', prefixIcon: const Icon(Icons.lock_outline),
                 suffixIcon: IconButton(onPressed: () => setState(() => obscure = !obscure), icon: Icon(obscure ? Icons.visibility_outlined : Icons.visibility_off_outlined))),
               validator: (v) => (v == null || v.length < 8) ? 'كلمة المرور يجب أن تكون 8 أحرف على الأقل.' : null),
-            if (error != null) ...[const SizedBox(height: 14), Text(error!, style: const TextStyle(color: Colors.redAccent))],
+            if (error != null) ...[const SizedBox(height: 14), SelectableText(error!, style: const TextStyle(color: Colors.redAccent))],
             const SizedBox(height: 22),
             FilledButton(onPressed: busy ? null : submit,
               style: FilledButton.styleFrom(backgroundColor: const Color(0xFFC9A227), foregroundColor: const Color(0xFF061B15), padding: const EdgeInsets.symmetric(vertical: 15)),
