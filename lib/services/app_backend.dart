@@ -77,13 +77,16 @@ class AppBackend {
     });
   }
 
-  static Future<void> savePost(String postId) async {
+  static Future<void> toggleSaved(String postId) async {
     final user = auth.currentUser;
     if (user == null) throw StateError('يجب تسجيل الدخول أولاً.');
-    await db.collection('users').doc(user.uid).collection('saved').doc(postId).set({
-      'postId': postId,
-      'savedAt': FieldValue.serverTimestamp(),
-    });
+    final ref = db.collection('users').doc(user.uid).collection('saved').doc(postId);
+    final saved = await ref.get();
+    if (saved.exists) {
+      await ref.delete();
+    } else {
+      await ref.set({'postId': postId, 'savedAt': FieldValue.serverTimestamp()});
+    }
   }
 
   static Future<void> addComment(String postId, String text) async {
