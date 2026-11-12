@@ -119,6 +119,69 @@ class AppBackend {
     });
   }
 
+
+  static Stream<DocumentSnapshot<Map<String, dynamic>>> watchUserProfile(String uid) =>
+      db.collection('users').doc(uid).snapshots();
+
+  static Stream<QuerySnapshot<Map<String, dynamic>>> watchFollowers(String uid) =>
+      db.collection('follows').where('targetId', isEqualTo: uid).snapshots();
+
+  static Stream<QuerySnapshot<Map<String, dynamic>>> watchFollowing(String uid) =>
+      db.collection('follows').where('followerId', isEqualTo: uid).snapshots();
+
+  static Future<void> toggleFollow(String targetUid) async {
+    final user = auth.currentUser;
+    if (user == null) throw StateError('يجب تسجيل الدخول أولاً.');
+    if (targetUid == user.uid) throw ArgumentError('لا يمكنك متابعة حسابك.');
+    final followRef = db.collection('follows').doc('${user.uid}_${targetUid}');
+    final myBlockRef = db.collection('users').doc(user.uid).collection('blocks').doc(targetUid);
+    final theirBlockRef = db.collection('users').doc(targetUid).collection('blocks').doc(user.uid);
+    await db.runTransaction((transaction) async {
+      final follow = await transaction.get(followRef);
+      final myBlock = await transaction.get(myBlockRef);
+      final theirBlock = await transaction.get(theirBlockRef);
+      if (follow.exists) {
+        transaction.delete(followRef);
+        return;
+      }
+      if (myBlock.exists || theirBlock.exists) {
+        throw StateError('لا يمكن متابعة هذا الحساب بسبب إعدادات الحظر.');
+      }
+      transaction.set(followRef, {
+        'followerId': user.uid,
+        'targetId': targetUid,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+    });
+  }
+
+  static Future<void> blockUser(String targetUid) async {
+    final user = auth.currentUser;
+    if (user == null) throw StateError('يجب تسجيل الدخول أولاً.');
+    if (targetUid == user.uid) throw ArgumentError('لا يمكنك حظر حسابك.');
+    final blockRef = db.collection('users').doc(user.uid).collection('blocks').doc(targetUid);
+    await blockRef.set({
+      'targetUid': targetUid,
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+    final batch = db.batch();
+    batch.delete(db.collection('follows').doc('${user.uid}_${targetUid}'));
+    batch.delete(db.collection('follows').doc('${targetUid}_${user.uid}'));
+    await batch.commit();
+  }
+
+  static Future<void> unblockUser(String targetUid) async {
+    final user = auth.currentUser;
+    if (user == null) throw StateError('يجب تسجيل الدخول أولاً.');
+    await db.collection('users').doc(user.uid).collection('blocks').doc(targetUid).delete();
+  }
+
+  static Stream<QuerySnapshot<Map<String, dynamic>>> watchBlockedUsers() {
+    final user = auth.currentUser;
+    if (user == null) throw StateError('يجب تسجيل الدخول أولاً.');
+    return db.collection('users').doc(user.uid).collection('blocks').snapshots();
+  }
+
   static String _contentType(String extension, bool isVideo) {
     const videos = {'mp4':'video/mp4','mov':'video/quicktime','m4v':'video/x-m4v','webm':'video/webm','3gp':'video/3gpp'};
     const images = {'jpg':'image/jpeg','jpeg':'image/jpeg','png':'image/png','webp':'image/webp','gif':'image/gif','heic':'image/heic'};
