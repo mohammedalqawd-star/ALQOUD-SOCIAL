@@ -45,7 +45,7 @@ class AlQoudSocialApp extends StatelessWidget {
         ),
         fontFamily: 'Roboto',
       ),
-      home: const Directionality(
+      home: Directionality(
         textDirection: TextDirection.rtl,
         child: FirebaseGate(firebaseReady: firebaseReady),
       ),
