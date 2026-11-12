@@ -33,7 +33,7 @@
    firebase deploy --only firestore:rules,firestore:indexes,storage
    ```
 
-راجع ملفات `firebase.json` و`firestore.rules` و`storage.rules` قبل النشر. لا تستخدم قواعد تسمح بالقراءة أو الكتابة العامة.
+انسخ `.firebaserc.example` إلى `.firebaserc` واستبدل `YOUR_FIREBASE_PROJECT_ID` بمعرّف مشروعك، أو نفّذ `firebase use --add`. راجع ملفات `firebase.json` و`firestore.rules` و`storage.rules` قبل النشر. لا تستخدم قواعد تسمح بالقراءة أو الكتابة العامة.
 
 ## تشغيل Flutter
 يتطلب المشروع Flutter حديثاً وDart 3.12 أو أحدث بسبب إصدارات بعض الحزم.
