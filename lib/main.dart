@@ -1,8 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'screens/auth_screen.dart';
+import 'screens/create_post_screen.dart';
+import 'screens/live_feed_screen.dart';
+import 'services/app_backend.dart';
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(const AlQoudSocialApp());
+  var firebaseReady = false;
+  try {
+    await Firebase.initializeApp();
+    firebaseReady = true;
+  } catch (error) {
+    debugPrint('Firebase is not configured: $error');
+  }
+  runApp(AlQoudSocialApp(firebaseReady: firebaseReady));
 }
 
 const Color emerald = Color(0xFF0B3D2E);
@@ -11,7 +24,8 @@ const Color gold = Color(0xFFC9A227);
 const Color ivory = Color(0xFFF5EFE0);
 
 class AlQoudSocialApp extends StatelessWidget {
-  const AlQoudSocialApp({super.key});
+  const AlQoudSocialApp({super.key, required this.firebaseReady});
+  final bool firebaseReady;
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +47,61 @@ class AlQoudSocialApp extends StatelessWidget {
       ),
       home: const Directionality(
         textDirection: TextDirection.rtl,
-        child: AppShell(),
+        child: FirebaseGate(firebaseReady: firebaseReady),
+      ),
+    );
+  }
+}
+
+
+class FirebaseGate extends StatelessWidget {
+  const FirebaseGate({super.key, required this.firebaseReady});
+  final bool firebaseReady;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!firebaseReady) return const FirebaseSetupScreen();
+    return StreamBuilder<User?>(
+      stream: AppBackend.authChanges(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(body: Center(child: CircularProgressIndicator(color: gold)));
+        }
+        if (snapshot.hasData) return const AppShell();
+        return const AuthScreen();
+      },
+    );
+  }
+}
+
+class FirebaseSetupScreen extends StatelessWidget {
+  const FirebaseSetupScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: SafeArea(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(26),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.cloud_off_rounded, color: gold, size: 58),
+                const SizedBox(height: 18),
+                const Text('بقي ربط خدمات التطبيق', style: TextStyle(fontSize: 23, fontWeight: FontWeight.w900)),
+                const SizedBox(height: 10),
+                const Text(
+                  'أضف إعدادات Firebase الخاصة بمشروعك أولاً. أنشئ مشروع Firebase، ثم فعّل Authentication بالبريد الإلكتروني وCloud Firestore وStorage، وبعدها نفّذ flutterfire configure.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.white70, height: 1.7),
+                ),
+                const SizedBox(height: 18),
+                const Text('لا ترفع ملفات المفاتيح أو الأسرار إلى مستودع عام.', textAlign: TextAlign.center, style: TextStyle(color: gold, fontSize: 12)),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -50,9 +118,9 @@ class _AppShellState extends State<AppShell> {
   int index = 0;
 
   final pages = const [
-    FeedScreen(),
+    LiveFeedScreen(),
     ExploreScreen(),
-    CreateScreen(),
+    CreatePostScreen(),
     InboxScreen(),
     ProfileScreen(),
   ];
@@ -422,66 +490,6 @@ class _ExploreScreenState extends State<ExploreScreen> {
   }
 }
 
-class CreateScreen extends StatelessWidget {
-  const CreateScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.all(20),
-      children: [
-        const SizedBox(height: 12),
-        const Center(child: Icon(Icons.add_to_photos_rounded, size: 66, color: gold)),
-        const SizedBox(height: 15),
-        const Center(child: Text('اصنع لحظتك في القعود', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900))),
-        const SizedBox(height: 8),
-        const Center(child: Text('ابدأ بفكرة، وأضف لمستك الخاصة.', style: TextStyle(color: Colors.white60))),
-        const SizedBox(height: 30),
-        _CreateOption(icon: Icons.video_library_outlined, title: 'رفع فيديو', subtitle: 'اختر مقطعاً من جهازك', onTap: () => _showUploadInfo(context)),
-        _CreateOption(icon: Icons.photo_library_outlined, title: 'منشور صور', subtitle: 'شارك مجموعة صور أو لحظة', onTap: () => _showUploadInfo(context)),
-        _CreateOption(icon: Icons.edit_note_rounded, title: 'منشور نصي', subtitle: 'اكتب فكرة أو قصة قصيرة', onTap: () => _textPost(context)),
-        _CreateOption(icon: Icons.auto_awesome, title: 'أدوات الإبداع', subtitle: 'قوالب وأفكار للمحتوى', onTap: () => _showUploadInfo(context)),
-        const SizedBox(height: 18),
-        const Text('نصيحة: احترم خصوصية الآخرين، وانشر محتوى تملك حق مشاركته.', textAlign: TextAlign.center, style: TextStyle(color: Colors.white54, fontSize: 12, height: 1.5)),
-      ],
-    );
-  }
-
-  static void _showUploadInfo(BuildContext context) {
-    showDialog<void>(context: context, builder: (context) => AlertDialog(
-      backgroundColor: const Color(0xFF102820),
-      title: const Text('رفع المحتوى'),
-      content: const Text('واجهة الرفع جاهزة للتطوير. يلزم إضافة منتقي الملفات وربط التخزين السحابي وقواعد مراجعة المحتوى قبل النشر الفعلي.'),
-      actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('حسناً'))],
-    ));
-  }
-
-  static void _textPost(BuildContext context) {
-    final controller = TextEditingController();
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: const Color(0xFF102820),
-      builder: (context) => Padding(
-        padding: EdgeInsets.fromLTRB(20, 20, 20, MediaQuery.of(context).viewInsets.bottom + 20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('منشور جديد', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 15),
-            TextField(controller: controller, maxLines: 5, maxLength: 500, decoration: const InputDecoration(hintText: 'ماذا تريد أن تشارك؟', filled: true)),
-            const SizedBox(height: 10),
-            SizedBox(width: double.infinity, child: FilledButton(onPressed: () {
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('هذه معاينة محلية؛ النشر يحتاج تسجيل الدخول وربط قاعدة البيانات.')));
-            }, child: const Text('حفظ كمسودة تجريبية'))),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 class InboxScreen extends StatelessWidget {
   const InboxScreen({super.key});
 
@@ -544,6 +552,9 @@ class ProfileScreen extends StatelessWidget {
           Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsScreen()));
         }),
         const _InfoTile(icon: Icons.help_outline, title: 'المساعدة والدعم', subtitle: 'الأسئلة الشائعة والإبلاغ عن مشكلة'),
+        _InfoTile(icon: Icons.logout_rounded, title: 'تسجيل الخروج', subtitle: 'الخروج من حسابك على هذا الجهاز', onTap: () async {
+          await AppBackend.signOut();
+        }),
       ],
     );
   }
