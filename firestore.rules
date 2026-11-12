@@ -17,6 +17,17 @@ service cloud.firestore {
           .hasOnly(['displayName', 'photoUrl', 'bio', 'updatedAt', 'privacy']);
       allow delete: if false;
 
+
+      match /blocks/{targetUid} {
+        allow read: if isOwner(uid);
+        allow create: if isOwner(uid)
+          && targetUid != uid
+          && request.resource.data.keys().hasOnly(['targetUid', 'createdAt'])
+          && request.resource.data.targetUid == targetUid;
+        allow delete: if isOwner(uid);
+        allow update: if false;
+      }
+
       match /saved/{postId} {
         allow read, create, delete: if isOwner(uid);
         allow update: if false;
@@ -68,10 +79,13 @@ service cloud.firestore {
     match /follows/{followId} {
       allow read: if signedIn();
       allow create: if signedIn()
+        && request.resource.data.keys().hasOnly(['followerId', 'targetId', 'createdAt'])
         && request.resource.data.followerId == request.auth.uid
         && request.resource.data.targetId is string
         && request.resource.data.targetId != request.auth.uid
-        && followId == request.auth.uid + '_' + request.resource.data.targetId;
+        && followId == request.auth.uid + '_' + request.resource.data.targetId
+        && !exists(/databases/$(database)/documents/users/$(request.auth.uid)/blocks/$(request.resource.data.targetId))
+        && !exists(/databases/$(database)/documents/users/$(request.resource.data.targetId)/blocks/$(request.auth.uid));
       allow delete: if signedIn() && resource.data.followerId == request.auth.uid;
       allow update: if false;
     }
