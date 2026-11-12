@@ -9,6 +9,11 @@ service cloud.firestore {
       return signedIn() && request.auth.uid == uid;
     }
 
+    function isModerator() {
+      return signedIn()
+        && (request.auth.token.admin == true || request.auth.token.moderator == true);
+    }
+
     match /users/{uid} {
       allow read: if signedIn();
       allow create: if isOwner(uid);
@@ -36,7 +41,9 @@ service cloud.firestore {
 
     match /posts/{postId} {
       allow read: if signedIn()
-        && (resource.data.status == 'published' || resource.data.authorId == request.auth.uid);
+        && (resource.data.status == 'published'
+          || resource.data.authorId == request.auth.uid
+          || isModerator());
       allow create: if signedIn()
         && request.resource.data.authorId == request.auth.uid
         && request.resource.data.keys().hasOnly([
@@ -64,7 +71,7 @@ service cloud.firestore {
       }
 
       match /comments/{commentId} {
-        allow read: if signedIn() && resource.data.status == 'approved';
+        allow read: if signedIn() && (resource.data.status == 'approved' || isModerator());
         allow create: if signedIn()
           && request.resource.data.authorId == request.auth.uid
           && request.resource.data.keys().hasOnly(['authorId', 'text', 'createdAt', 'status'])
@@ -96,7 +103,13 @@ service cloud.firestore {
         && request.resource.data.keys().hasOnly(['reporterId', 'postId', 'reason', 'createdAt'])
         && request.resource.data.reason is string
         && request.resource.data.reason.size() <= 300;
-      allow read, update, delete: if false;
+      allow read: if isModerator();
+      allow update, delete: if false;
+    }
+
+    match /moderation_audit/{entryId} {
+      allow read: if isModerator();
+      allow write: if false;
     }
 
     match /{document=**} {
