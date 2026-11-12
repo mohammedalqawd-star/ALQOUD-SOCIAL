@@ -10,7 +10,7 @@ service cloud.firestore {
     }
 
     match /users/{uid} {
-      allow read: if signedIn();
+      allow read: if signedIn() && (resource.data.status == 'published' || resource.data.authorId == request.auth.uid);
       allow create: if isOwner(uid);
       allow update: if isOwner(uid)
         && request.resource.data.diff(resource.data).affectedKeys()
