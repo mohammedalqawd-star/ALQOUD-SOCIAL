@@ -19,7 +19,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   void dispose() { caption.dispose(); super.dispose(); }
 
   Future<void> chooseMedia() async {
-    final file = await picker.pickMedia(imageQuality: 88, maxDuration: const Duration(minutes: 3));
+    final file = await picker.pickMedia(imageQuality: 88);
     if (file != null && mounted) setState(() { selected = file; error = null; });
   }
 
