@@ -85,3 +85,21 @@ The Android project is configured for a GitHub Actions debug APK build.
 5. When the run succeeds, open the run summary and download the `alqoud-social-debug-apk` artifact. Extract the ZIP to get `app-debug.apk`.
 
 The workflow runs dependency resolution, Flutter analysis, tests, and a debug APK build. This is a development build, not a signed production release.
+
+
+## Trusted content moderation backend
+
+The `functions/` directory contains callable Firebase Functions for approving or rejecting pending posts and comments. Only Firebase Auth users with a trusted custom claim (`admin: true` or `moderator: true`) can call these endpoints. The mobile app cannot grant these claims to itself. Assign moderator claims only from a secured administrator environment using the Firebase Admin SDK, and protect that environment's credentials.
+
+Deploy the backend and rules from a trusted development environment with Firebase CLI:
+```bash
+cd functions
+npm install
+npm run build
+cd ..
+firebase deploy --only functions,firestore:rules
+```
+
+**Billing note:** deploying Cloud Functions may require the Firebase project to use the Blaze plan. Review the current Firebase pricing and set budget alerts with the project owner before enabling billing. Do not enable billing or deploy production services without the account owner's approval.
+
+The moderation endpoints are not yet connected to an in-app moderator dashboard. Until a trusted moderator claim is assigned and the functions are deployed, new posts remain in `pending_review`.
