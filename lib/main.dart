@@ -262,7 +262,7 @@ class _FeedScreenState extends State<FeedScreen> {
                       children: [
                         Row(
                           children: [
-                            CircleAvatar(backgroundColor: gold, child: Text(post.creator.characters.first, style: const TextStyle(color: deepGreen, fontWeight: FontWeight.bold))),
+                            CircleAvatar(backgroundColor: gold, child: Text(post.creator.substring(0, 1), style: const TextStyle(color: deepGreen, fontWeight: FontWeight.bold))),
                             const SizedBox(width: 9),
                             Expanded(child: Text(post.creator + '  ' + post.handle, style: const TextStyle(fontWeight: FontWeight.bold, color: ivory))),
                             OutlinedButton(
