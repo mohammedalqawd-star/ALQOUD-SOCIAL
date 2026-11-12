@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'screens/auth_screen.dart';
@@ -580,9 +580,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
         padding: const EdgeInsets.all(18),
         children: [
           const Text('الخصوصية والأمان', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-          SwitchListTile(value: privateMode, activeColor: gold, title: const Text('حساب خاص افتراضياً'), subtitle: const Text('يتطلب قبول طلبات المتابعة'), onChanged: (v) => setState(() => privateMode = v)),
-          SwitchListTile(value: safeComments, activeColor: gold, title: const Text('تصفية التعليقات'), subtitle: const Text('إعداد تجريبي لتقليل التعليقات غير اللائقة'), onChanged: (v) => setState(() => safeComments = v)),
-          SwitchListTile(value: notifications, activeColor: gold, title: const Text('الإشعارات'), onChanged: (v) => setState(() => notifications = v)),
+          SwitchListTile(value: privateMode, activeThumbColor: gold, title: const Text('حساب خاص افتراضياً'), subtitle: const Text('يتطلب قبول طلبات المتابعة'), onChanged: (v) => setState(() => privateMode = v)),
+          SwitchListTile(value: safeComments, activeThumbColor: gold, title: const Text('تصفية التعليقات'), subtitle: const Text('إعداد تجريبي لتقليل التعليقات غير اللائقة'), onChanged: (v) => setState(() => safeComments = v)),
+          SwitchListTile(value: notifications, activeThumbColor: gold, title: const Text('الإشعارات'), onChanged: (v) => setState(() => notifications = v)),
           const Divider(height: 30),
           const _InfoTile(icon: Icons.block, title: 'الحسابات المحظورة', subtitle: 'إدارة الحسابات التي لا تريد التفاعل معها'),
           const _InfoTile(icon: Icons.flag_outlined, title: 'معايير المجتمع', subtitle: 'المحتوى المسموح وآلية الإبلاغ'),
