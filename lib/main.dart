@@ -595,29 +595,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 }
 
-class _CreateOption extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final VoidCallback onTap;
-  const _CreateOption({required this.icon, required this.title, required this.subtitle, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      color: const Color(0xFF102820),
-      margin: const EdgeInsets.only(bottom: 12),
-      child: ListTile(
-        onTap: onTap,
-        leading: CircleAvatar(backgroundColor: emerald, child: Icon(icon, color: gold)),
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
-        subtitle: Text(subtitle),
-        trailing: const Icon(Icons.chevron_left, color: gold),
-      ),
-    );
-  }
-}
-
 class _InfoTile extends StatelessWidget {
   final IconData icon;
   final String title;
