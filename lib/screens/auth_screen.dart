@@ -58,7 +58,7 @@ class _AuthScreenState extends State<AuthScreen> {
       case 'operation-not-allowed': return 'تسجيل البريد الإلكتروني غير مسموح في إعدادات Firebase.';
       case 'too-many-requests': return 'تمت محاولات كثيرة. انتظر قليلاً ثم أعد المحاولة.';
       default:
-        final extra = (details == null || details.trim().isEmpty) ? '' : '\\nالتفاصيل: ' + details;
+        final extra = (details == null || details.trim().isEmpty) ? '' : '\nالتفاصيل: ' + details;
         return 'فشل التحقق من Firebase (رمز: ' + code + ').' + extra;
     }
   }
