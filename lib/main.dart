@@ -30,7 +30,7 @@ class AlQoudSocialApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'ALQOUD – القعود',
+      title: 'ALQOUD SOCIAL',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,
@@ -68,7 +68,7 @@ class FirebaseGate extends StatelessWidget {
           return const Scaffold(body: Center(child: CircularProgressIndicator(color: gold)));
         }
         if (snapshot.hasData) return const AppShell();
-        return const AuthScreen();
+        return const AppShell();
       },
     );
   }
@@ -143,14 +143,19 @@ class _AppShellState extends State<AppShell> {
                 borderRadius: BorderRadius.circular(11),
               ),
               child: const Center(
-                child: Text('ق', style: TextStyle(color: deepGreen, fontSize: 23, fontWeight: FontWeight.w900)),
+                child: Icon(Icons.play_arrow_rounded, color: deepGreen, size: 27),
               ),
             ),
             const SizedBox(width: 10),
-            Text(titles[index], style: const TextStyle(fontWeight: FontWeight.w900, letterSpacing: .2)),
+            const Text('ALQOUD SOCIAL', style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1.0, fontSize: 15)),
           ],
         ),
         actions: [
+          if (AppBackend.auth.currentUser == null)
+            TextButton(
+              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AuthScreen())),
+              child: const Text('دخول', style: TextStyle(color: gold, fontWeight: FontWeight.w800)),
+            ),
           IconButton(
             tooltip: 'الإشعارات',
             onPressed: () => _showNotice(context),
