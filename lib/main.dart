@@ -125,8 +125,6 @@ class _AppShellState extends State<AppShell> {
     ProfileScreen(),
   ];
 
-  final titles = const ['القعود', 'اكتشف', 'إنشاء محتوى', 'التواصل', 'ملفي'];
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
