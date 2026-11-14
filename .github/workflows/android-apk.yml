@@ -45,6 +45,28 @@ jobs:
           printf '%s' "$GOOGLE_SERVICES_JSON" > android/app/google-services.json
           test -s android/app/google-services.json
 
+      - name: Validate Firebase project and Android package
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          config = json.loads(Path("android/app/google-services.json").read_text())
+          project_id = config.get("project_info", {}).get("project_id", "")
+          packages = [
+              item.get("client_info", {}).get("android_client_info", {}).get("package_name", "")
+              for item in config.get("client", [])
+          ]
+          expected_project = "alqoud-social-6686c"
+          expected_package = "com.alqoud.social"
+          print(f"Firebase project: {project_id}")
+          print(f"Android package(s): {', '.join(packages)}")
+          if project_id != expected_project or expected_package not in packages:
+              raise SystemExit(
+                  "Wrong Firebase configuration. Use project alqoud-social-6686c "
+                  "with Android package com.alqoud.social."
+              )
+          PY
+
       - name: Install Flutter dependencies
         run: flutter pub get
 
