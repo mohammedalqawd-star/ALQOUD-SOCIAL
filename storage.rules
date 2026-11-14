@@ -6,8 +6,10 @@ service firebase.storage {
     }
 
     match /users/{uid}/media/{fileName} {
+      // Published feed media must be readable by signed-out visitors.
       allow read: if true;
       allow write: if signedIn()
+        && request.auth.token.accountActive == true
         && request.auth.uid == uid
         && request.resource.size < 100 * 1024 * 1024
         && request.resource.contentType.matches('image/.*|video/.*');
