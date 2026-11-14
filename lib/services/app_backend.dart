@@ -31,7 +31,7 @@ class AppBackend {
     await credential.user!.updateDisplayName(displayName.trim());
     await db.collection('users').doc(credential.user!.uid).set({
       'displayName': displayName.trim(), 'photoUrl': null, 'bio': '',
-      'privacy': 'private', 'createdAt': FieldValue.serverTimestamp(),
+      'privacy': 'private', 'accountStatus': 'pending', 'createdAt': FieldValue.serverTimestamp(),
       'updatedAt': FieldValue.serverTimestamp(),
     });
   }
