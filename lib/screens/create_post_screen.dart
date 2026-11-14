@@ -18,11 +18,6 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   String? error;
 
   @override
-  void initState() {
-    super.initState();
-  }
-
-  @override
   void dispose() { caption.dispose(); super.dispose(); }
 
   Future<void> refreshActivation() async {
