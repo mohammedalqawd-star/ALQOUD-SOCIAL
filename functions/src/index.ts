@@ -1,4 +1,5 @@
-import { initializeApp } from "firebase-admin/app";\nimport { getAuth } from "firebase-admin/auth";
+import { initializeApp } from "firebase-admin/app";
+import { getAuth } from "firebase-admin/auth";
 import { FieldValue, getFirestore } from "firebase-admin/firestore";
 import { HttpsError, onCall } from "firebase-functions/v2/https";
 
@@ -82,21 +83,17 @@ export const reviewComment = onCall({ region: "us-central1" }, async (request) =
   return { success: true };
 });
 
-/**
- * Activate a member account. Only trusted moderators may call this function.
- * The mobile client cannot grant its own accountActive claim.
- */
 export const activateAccount = onCall({ region: "us-central1" }, async (request) => {
-  requireModerator(request);
+  const moderatorUid = requireModerator(request);
   const targetUid = request.data?.uid;
   if (typeof targetUid !== "string" || targetUid.length < 10) {
     throw new HttpsError("invalid-argument", "معرّف الحساب غير صحيح.");
   }
 
-  const target = await getAuth().getUser(targetUid);
-  const existingClaims = target.customClaims ?? {};
-  await getAuth().setCustomUserClaims(targetUid, {
-    ...existingClaims,
+  const auth = getAuth();
+  const target = await auth.getUser(targetUid);
+  await auth.setCustomUserClaims(targetUid, {
+    ...(target.customClaims ?? {}),
     accountActive: true
   });
 
@@ -106,7 +103,7 @@ export const activateAccount = onCall({ region: "us-central1" }, async (request)
   }, { merge: true });
 
   await db.collection("moderation_audit").add({
-    moderatorUid: request.auth!.uid,
+    moderatorUid,
     contentType: "account",
     contentId: targetUid,
     decision: "activate",
