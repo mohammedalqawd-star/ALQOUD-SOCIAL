@@ -16,21 +16,17 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   XFile? selected;
   bool uploading = false;
   String? error;
-  late Future<bool> activation;
 
   @override
   void initState() {
     super.initState();
-    activation = AppBackend.isAccountActive(forceRefresh: true);
   }
 
   @override
   void dispose() { caption.dispose(); super.dispose(); }
 
   Future<void> refreshActivation() async {
-    setState(() {
-      activation = AppBackend.isAccountActive(forceRefresh: true);
-    });
+    setState(() {});
   }
 
   Future<void> openSignIn() async {
@@ -89,7 +85,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     }
 
     return FutureBuilder<bool>(
-      future: activation,
+      future: AppBackend.isAccountActive(forceRefresh: true),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator(color: Color(0xFFC9A227)));
