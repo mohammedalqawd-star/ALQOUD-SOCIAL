@@ -72,7 +72,9 @@ class _AuthScreenState extends State<AuthScreen> {
           child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
             Container(width: 76, height: 76, alignment: Alignment.center,
               decoration: BoxDecoration(gradient: const LinearGradient(colors: [Color(0xFFC9A227), Color(0xFFE8D9A0)]), borderRadius: BorderRadius.circular(24)),
-              child: const Text('ق', style: TextStyle(color: Color(0xFF061B15), fontSize: 48, fontWeight: FontWeight.w900))),
+              child: const Icon(Icons.play_arrow_rounded, color: Color(0xFF061B15), size: 52)),
+            const SizedBox(height: 12),
+            const Text('ALQOUD SOCIAL', style: TextStyle(letterSpacing: 1.5, fontSize: 17, fontWeight: FontWeight.w900, color: Color(0xFFC9A227))),
             const SizedBox(height: 24),
             const Text('أهلاً بك في القعود', style: TextStyle(fontSize: 27, fontWeight: FontWeight.w900)),
             const SizedBox(height: 8),
