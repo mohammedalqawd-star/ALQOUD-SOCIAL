@@ -28,6 +28,7 @@ class _AuthScreenState extends State<AuthScreen> {
       } else {
         await AppBackend.signIn(email: email.text, password: password.text);
       }
+      if (mounted) Navigator.of(context).pop();
     } on FirebaseAuthException catch (e, stack) {
       debugPrint('Firebase Auth error: code=${e.code}, message=${e.message}');
       debugPrintStack(stackTrace: stack);
