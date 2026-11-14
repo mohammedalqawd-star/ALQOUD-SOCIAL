@@ -16,12 +16,18 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   XFile? selected;
   bool uploading = false;
   String? error;
+  Future<bool>? activation;
+  String? activationUid;
 
   @override
   void dispose() { caption.dispose(); super.dispose(); }
 
   Future<void> refreshActivation() async {
-    setState(() {});
+    final user = FirebaseAuth.instance.currentUser;
+    setState(() {
+      activationUid = user?.uid;
+      activation = user == null ? null : AppBackend.isAccountActive(forceRefresh: true);
+    });
   }
 
   Future<void> openSignIn() async {
@@ -79,8 +85,13 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
       );
     }
 
+    if (activationUid != user.uid || activation == null) {
+      activationUid = user.uid;
+      activation = AppBackend.isAccountActive(forceRefresh: true);
+    }
+
     return FutureBuilder<bool>(
-      future: AppBackend.isAccountActive(forceRefresh: true),
+      future: activation,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator(color: Color(0xFFC9A227)));
