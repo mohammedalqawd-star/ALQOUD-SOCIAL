@@ -9,7 +9,9 @@
 المنصة المستهدفة في الإصدار الأول: Android. تشمل الرؤية الكاملة مركز المبدعين، التوصيات، البث المباشر المقيد بضوابط السلامة، الإشعارات، لوحة الإدارة والمراجعة، تعدد اللغات، محرر الفيديو، والتحليلات. هذه عناصر نطاق معتمدة وليست كلها منفذة بعد؛ راجع خارطة التنفيذ لمعرفة حالة كل مرحلة.
 
 ## الموجود في نسخة التطوير الحالية
-- واجهة عربية RTL بهوية زمردية وذهبية.
+- واجهة عربية RTL بهوية زمردية وذهبية مع شعار إنجليزي ALQOUD SOCIAL.
+- دخول كضيف لمشاهدة المنشورات المعتمدة دون إنشاء حساب.
+- التسجيل وتسجيل الدخول اختياريان للتصفح؛ النشر يتطلب حساباً فعّله فريق الإدارة.
 - تسجيل حساب وتسجيل دخول بالبريد الإلكتروني عبر Firebase Authentication.
 - إنشاء ملف مستخدم أساسي في Cloud Firestore.
 - اختيار صورة أو فيديو من الجهاز ورفعه إلى Firebase Storage.
@@ -103,3 +105,13 @@ firebase deploy --only functions,firestore:rules
 **Billing note:** deploying Cloud Functions may require the Firebase project to use the Blaze plan. Review the current Firebase pricing and set budget alerts with the project owner before enabling billing. Do not enable billing or deploy production services without the account owner's approval.
 
 The moderation endpoints are not yet connected to an in-app moderator dashboard. Until a trusted moderator claim is assigned and the functions are deployed, new posts remain in `pending_review`.
+
+
+## Guest browsing and publishing activation
+
+- Signed-out visitors can read published post documents and their media.
+- Registration creates a member record with `accountStatus: pending`.
+- Only a trusted Firebase Admin SDK process can grant the custom claim `accountActive: true`; the mobile app cannot activate itself.
+- Firestore post creation and Storage uploads require that claim. New posts remain `pending_review` until a trusted moderator approves them.
+- A moderator-only callable function named `activateAccount` is included in `functions/src/index.ts`. Deploy Cloud Functions and Firestore/Storage rules before relying on this workflow.
+- Never place Firebase Admin credentials or service-account JSON files in the Android app or a public repository.
