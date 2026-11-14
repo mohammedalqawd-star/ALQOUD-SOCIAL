@@ -9,7 +9,7 @@ service cloud.firestore {
       return signedIn() && request.auth.uid == uid;
     }
 
-    function isModerator() {
+    function isActiveMember() {\n      return signedIn() && request.auth.token.accountActive == true;\n    }\n\n    function isModerator() {
       return signedIn()
         && (request.auth.token.admin == true || request.auth.token.moderator == true);
     }
@@ -25,7 +25,7 @@ service cloud.firestore {
 
       match /blocks/{targetUid} {
         allow read: if isOwner(uid);
-        allow create: if isOwner(uid)
+        allow create: if isActiveMember() && isOwner(uid)
           && targetUid != uid
           && request.resource.data.keys().hasOnly(['targetUid', 'createdAt'])
           && request.resource.data.targetUid == targetUid;
@@ -43,7 +43,7 @@ service cloud.firestore {
       allow read: if signedIn()
         && (resource.data.status == 'published'
           || resource.data.authorId == request.auth.uid
-          || isModerator());
+          || isModerator())));
       allow create: if signedIn()
         && request.resource.data.authorId == request.auth.uid
         && request.resource.data.keys().hasOnly([
