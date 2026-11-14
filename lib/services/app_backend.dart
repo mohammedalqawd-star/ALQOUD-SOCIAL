@@ -51,6 +51,7 @@ class AppBackend {
 
   static Future<void> uploadPost({required XFile file, required String caption}) async {
     final user = auth.currentUser;
+    if (user == null) throw StateError('سجّل الدخول أولاً.');
     await requireActiveAccount();
     final extension = file.name.contains('.') ? file.name.split('.').last.toLowerCase() : 'bin';
     const videoExtensions = {'mp4', 'mov', 'm4v', 'webm', '3gp'};
