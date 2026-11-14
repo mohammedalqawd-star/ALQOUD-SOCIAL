@@ -9,19 +9,22 @@ service cloud.firestore {
       return signedIn() && request.auth.uid == uid;
     }
 
-    function isActiveMember() {\n      return signedIn() && request.auth.token.accountActive == true;\n    }\n\n    function isModerator() {
+    function isActiveMember() {
+      return signedIn() && request.auth.token.accountActive == true;
+    }
+
+    function isModerator() {
       return signedIn()
         && (request.auth.token.admin == true || request.auth.token.moderator == true);
     }
 
     match /users/{uid} {
-      allow read: if signedIn();
+      allow read: if signedIn() && (isOwner(uid) || isModerator());
       allow create: if isOwner(uid);
       allow update: if isOwner(uid)
         && request.resource.data.diff(resource.data).affectedKeys()
           .hasOnly(['displayName', 'photoUrl', 'bio', 'updatedAt', 'privacy']);
       allow delete: if false;
-
 
       match /blocks/{targetUid} {
         allow read: if isOwner(uid);
@@ -34,17 +37,17 @@ service cloud.firestore {
       }
 
       match /saved/{postId} {
-        allow read, create, delete: if isOwner(uid);
+        allow read: if isOwner(uid);
+        allow create, delete: if isActiveMember() && isOwner(uid);
         allow update: if false;
       }
     }
 
     match /posts/{postId} {
-      allow read: if signedIn()
-        && (resource.data.status == 'published'
-          || resource.data.authorId == request.auth.uid
-          || isModerator())));
-      allow create: if signedIn()
+      allow read: if resource.data.status == 'published'
+        || (signedIn()
+          && (resource.data.authorId == request.auth.uid || isModerator()));
+      allow create: if isActiveMember()
         && request.resource.data.authorId == request.auth.uid
         && request.resource.data.keys().hasOnly([
           'authorId', 'caption', 'mediaUrl', 'mediaType', 'createdAt',
@@ -55,24 +58,25 @@ service cloud.firestore {
         && request.resource.data.caption.size() <= 500
         && request.resource.data.mediaUrl is string
         && request.resource.data.mediaType in ['image', 'video'];
-      allow update: if signedIn()
+      allow update: if isActiveMember()
         && resource.data.authorId == request.auth.uid
         && request.resource.data.diff(resource.data).affectedKeys()
           .hasOnly(['caption', 'updatedAt']);
       allow delete: if false;
 
       match /likes/{uid} {
-        allow read: if signedIn();
-        allow create: if isOwner(uid)
+        allow read: if resource.data != null;
+        allow create: if isActiveMember() && isOwner(uid)
           && request.resource.data.userId == request.auth.uid
           && request.resource.data.keys().hasOnly(['userId', 'createdAt']);
-        allow delete: if isOwner(uid);
+        allow delete: if isActiveMember() && isOwner(uid);
         allow update: if false;
       }
 
       match /comments/{commentId} {
-        allow read: if signedIn() && (resource.data.status == 'approved' || isModerator());
-        allow create: if signedIn()
+        allow read: if resource.data.status == 'approved'
+          || (signedIn() && isModerator());
+        allow create: if isActiveMember()
           && request.resource.data.authorId == request.auth.uid
           && request.resource.data.keys().hasOnly(['authorId', 'text', 'createdAt', 'status'])
           && request.resource.data.text is string
@@ -85,7 +89,7 @@ service cloud.firestore {
 
     match /follows/{followId} {
       allow read: if signedIn();
-      allow create: if signedIn()
+      allow create: if isActiveMember()
         && request.resource.data.keys().hasOnly(['followerId', 'targetId', 'createdAt'])
         && request.resource.data.followerId == request.auth.uid
         && request.resource.data.targetId is string
@@ -93,12 +97,12 @@ service cloud.firestore {
         && followId == request.auth.uid + '_' + request.resource.data.targetId
         && !exists(/databases/$(database)/documents/users/$(request.auth.uid)/blocks/$(request.resource.data.targetId))
         && !exists(/databases/$(database)/documents/users/$(request.resource.data.targetId)/blocks/$(request.auth.uid));
-      allow delete: if signedIn() && resource.data.followerId == request.auth.uid;
+      allow delete: if isActiveMember() && resource.data.followerId == request.auth.uid;
       allow update: if false;
     }
 
     match /reports/{reportId} {
-      allow create: if signedIn()
+      allow create: if isActiveMember()
         && request.resource.data.reporterId == request.auth.uid
         && request.resource.data.keys().hasOnly(['reporterId', 'postId', 'reason', 'createdAt'])
         && request.resource.data.reason is string
