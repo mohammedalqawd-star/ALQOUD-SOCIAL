@@ -11,6 +11,21 @@ class AppBackend {
   static final storage = FirebaseStorage.instance;
   static Stream<User?> authChanges() => auth.authStateChanges();
 
+  static Future<bool> isAccountActive({bool forceRefresh = false}) async {
+    final user = auth.currentUser;
+    if (user == null) return false;
+    final token = await user.getIdTokenResult(forceRefresh);
+    return token.claims?['accountActive'] == true;
+  }
+
+  static Future<void> requireActiveAccount() async {
+    final user = auth.currentUser;
+    if (user == null) throw StateError('سجّل الدخول أولاً.');
+    if (!await isAccountActive(forceRefresh: true)) {
+      throw StateError('حسابك غير مفعّل للنشر بعد. انتظر موافقة الإدارة.');
+    }
+  }
+
   static Future<void> register({required String displayName, required String email, required String password}) async {
     final credential = await auth.createUserWithEmailAndPassword(email: email.trim(), password: password);
     await credential.user!.updateDisplayName(displayName.trim());
@@ -36,7 +51,7 @@ class AppBackend {
 
   static Future<void> uploadPost({required XFile file, required String caption}) async {
     final user = auth.currentUser;
-    if (user == null) throw StateError('يجب تسجيل الدخول أولاً.');
+    await requireActiveAccount();
     final extension = file.name.contains('.') ? file.name.split('.').last.toLowerCase() : 'bin';
     const videoExtensions = {'mp4', 'mov', 'm4v', 'webm', '3gp'};
     final isVideo = videoExtensions.contains(extension);
